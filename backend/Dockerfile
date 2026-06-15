@@ -15,5 +15,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 分兩次複製的目的是要符合docker layer設計的目的, 可以加速docker開啟與建立
 COPY . .
 
-# 執行命令,開始創建 docker
+# 執行命令, uvicorn指開啟FastAPI 的「Web Server」開始運作
 CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
