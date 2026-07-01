@@ -1,11 +1,11 @@
 services:
   backend:
-    build: ./backend
+    build:
+      context: ./backend
 
     container_name: twsestock_backend
 
-    ports:
-      - "8000:8000"
+    restart: unless-stopped
 
-    volumes:
-      - ./backend:/app
+    ports:
+      - "127.0.0.1:8000:8000"
