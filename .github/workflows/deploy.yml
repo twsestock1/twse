@@ -13,14 +13,6 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Debug EC2 Host
-        run: echo "${{ secrets.EC2_HOST }}"
-      
-      - name: Debug EC2 Host (safe length check)
-        run: |
-          echo "HOST length:"
-          echo "${{ secrets.EC2_HOST }}" | wc -c
-
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
@@ -29,9 +21,20 @@ jobs:
           EC2_HOST="${{ secrets.EC2_HOST }}"
           ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
 
-      - name: Test SSH Connection
+      - name: Deploy to EC2
         run: |
           ssh -i ~/.ssh/id_ed25519 \
               -p ${{ secrets.EC2_PORT }} \
-              ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
-              "echo 'GitHub Actions SSH Success!'"
+              ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+
+            cd ~/twsestock
+
+            echo "Pull latest code..."
+            git pull origin main
+
+            echo "Restart Docker..."
+            docker compose down
+            docker compose up -d --build
+
+            echo "Deployment completed!"
+          EOF
