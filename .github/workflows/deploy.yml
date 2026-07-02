@@ -26,3 +26,5 @@ jobs:
               -p ${{ secrets.EC2_PORT }} \
               ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
               "echo 'GitHub Actions SSH Success!'"
+      - name: Debug EC2 Host
+        run: echo "${{ secrets.EC2_HOST }}"
