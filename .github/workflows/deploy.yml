@@ -15,7 +15,12 @@ jobs:
 
       - name: Debug EC2 Host
         run: echo "${{ secrets.EC2_HOST }}"
-        
+      
+      - name: Debug EC2 Host (safe length check)
+        run: |
+          echo "HOST length:"
+          echo "${{ secrets.EC2_HOST }}" | wc -c
+
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
