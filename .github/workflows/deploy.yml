@@ -27,7 +27,9 @@ jobs:
               -p ${{ secrets.EC2_PORT }} \
               ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
 
-            cd ~/twsestock
+            set -e
+
+            cd ~/projects/twse
 
             echo "Pull latest code..."
             git pull origin main
