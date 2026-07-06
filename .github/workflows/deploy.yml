@@ -18,25 +18,13 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
+
           EC2_HOST="${{ secrets.EC2_HOST }}"
           ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
 
       - name: Deploy to EC2
         run: |
           ssh -i ~/.ssh/id_ed25519 \
-              -p ${{ secrets.EC2_PORT }} \
-              ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-
-            set -e
-
-            cd ~/projects/twse
-
-            echo "Pull latest code..."
-            git pull origin main
-
-            echo "Restart Docker..."
-            docker compose down
-            docker compose up -d --build
-
-            echo "Deployment completed!"
-          EOF
+            -p ${{ secrets.EC2_PORT }} \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
+            "cd ~/projects/twse && ./deploy.sh"
