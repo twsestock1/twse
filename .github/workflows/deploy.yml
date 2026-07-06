@@ -22,17 +22,30 @@ jobs:
           EC2_HOST="${{ secrets.EC2_HOST }}"
           ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
 
-      - name: Copy deployment scripts
+      - name: Prepare script directory
+        run: |
+          ssh -i ~/.ssh/id_ed25519 \
+            -p ${{ secrets.EC2_PORT }} \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
+            "mkdir -p ~/projects/twse/scripts"
+
+      - name: Copy deploy.sh
         run: |
           scp -i ~/.ssh/id_ed25519 \
             -P ${{ secrets.EC2_PORT }} \
-            deploy.sh \
-            health_check.sh \
-            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/projects/twse/scripts
+            scripts/deploy.sh \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/projects/twse/scripts/
+
+      - name: Copy health_check.sh
+        run: |
+          scp -i ~/.ssh/id_ed25519 \
+            -P ${{ secrets.EC2_PORT }} \
+            scripts/health_check.sh \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/projects/twse/scripts/
 
       - name: Deploy
         run: |
           ssh -i ~/.ssh/id_ed25519 \
             -p ${{ secrets.EC2_PORT }} \
             ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
-            "cd ~/projects/twse && chmod +x deploy.sh health_check.sh && scripts/deploy.sh"
+            "cd ~/projects/twse && chmod +x scripts/*.sh && bash scripts/deploy.sh"
