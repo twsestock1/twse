@@ -28,7 +28,7 @@ jobs:
             -P ${{ secrets.EC2_PORT }} \
             deploy.sh \
             health_check.sh \
-            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/projects/twse/
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/projects/twse/scripts
 
       - name: Deploy
         run: |
