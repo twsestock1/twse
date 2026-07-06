@@ -8,3 +8,5 @@ curl \
   --show-error \
   --max-time 10 \
   https://kuguge.com/health
+
+echo "Health check passed"

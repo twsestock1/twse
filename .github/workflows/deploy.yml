@@ -35,4 +35,4 @@ jobs:
           ssh -i ~/.ssh/id_ed25519 \
             -p ${{ secrets.EC2_PORT }} \
             ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
-            "cd ~/projects/twse && chmod +x deploy.sh health_check.sh && ./deploy.sh"
+            "cd ~/projects/twse && chmod +x deploy.sh health_check.sh && scripts/deploy.sh"

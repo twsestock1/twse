@@ -19,6 +19,6 @@ docker compose up -d --build --remove-orphans
 
 echo "Web API check"
 chmod +x *.sh
-./health_check.sh
+scripts/health_check.sh
 
 echo "Deploy Success"
