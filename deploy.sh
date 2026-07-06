@@ -18,6 +18,7 @@ echo "Build and restart container..."
 docker compose up -d --build --remove-orphans
 
 echo "Web API check"
+chmod +x *.sh
 ./health_check.sh
 
 echo "Deploy Success"
