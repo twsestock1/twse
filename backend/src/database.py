@@ -13,7 +13,7 @@ def get_connection():
     conn = psycopg.connect(
         host=db["host"],
         port=db["port"],
-        database=db["name"],
+        dbname=db["name"],
         user=db["user"],
         password=db["password"]
     )

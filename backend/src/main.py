@@ -16,30 +16,35 @@ def health():
 def db_test():
 
     conn = None
+    cur = None
 
     try:
         conn = get_connection()
 
         cur = conn.cursor()
 
-        cur.execute("SELECT version();")
+        cur.execute("""
+            SELECT *
+            FROM stockslist;
+        """)
 
-        version = cur.fetchone()[0]
-
-        cur.close()
-        conn.close()
+        rows = cur.fetchall()
 
         return {
             "status": "success",
-            "postgres_version": version
+            "data": rows
         }
 
     except Exception as e:
-
-        if conn:
-            conn.close()
 
         return {
             "status": "failed",
             "error": str(e)
         }
+
+    finally:
+        if cur:
+            cur.close()
+
+        if conn:
+            conn.close()
