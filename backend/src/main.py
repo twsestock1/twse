@@ -1,5 +1,6 @@
 from fastapi import FastAPI
-from database import get_connection
+from src.database import get_connection
+from src.parameter_store import get_parameters
 
 app = FastAPI()
 
@@ -17,12 +18,10 @@ def db_test():
     conn = None
 
     try:
-
         conn = get_connection()
 
         cur = conn.cursor()
 
-        # 測試資料庫是否成功連線
         cur.execute("SELECT version();")
 
         version = cur.fetchone()[0]

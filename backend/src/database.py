@@ -1,6 +1,6 @@
-import psycopg2
+import psycopg
 
-from parameter_store import get_parameters
+from src.parameter_store import get_parameters
 
 
 def get_connection():
@@ -10,7 +10,7 @@ def get_connection():
 
     db = get_parameters("/stock/prod/db")
 
-    conn = psycopg2.connect(
+    conn = psycopg.connect(
         host=db["host"],
         port=db["port"],
         database=db["name"],
