@@ -204,7 +204,9 @@ async function searchStock(){
 
     try{
 
-        const response=await fetch(`/api/stocks?keyword=${encodeURIComponent(keyword)}`);
+        const response = await fetch(
+            `/api/stocks?keyword=${encodeURIComponent(q)}`
+            );
 
         if(!response.ok){
 
