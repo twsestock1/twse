@@ -182,7 +182,7 @@ def get_stock(stock_code: str):
             conn.close()
 
 # 測試新資料庫連線狀態
-@app.get("/api/stocks/search")
+@app.get("/stocks/search")
 def search_stocks(
     keyword: str = Query(..., min_length=1)
 ):
