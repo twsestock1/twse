@@ -49,7 +49,7 @@
     try {
 
         const response = await fetch(
-            `https://kuguge.com/stocks/search?keyword=${encodeURIComponent(keyword)}`
+            `/api/stocks/search?keyword=${encodeURIComponent(keyword)}`
         );
 
         if (!response.ok) {
