@@ -39,7 +39,7 @@ def search_stocks(
 
     search_keyword = f"%{keyword}%"
 
-    with get_db_connection() as conn:
+    with get_connection() as conn:
 
         with conn.cursor() as cur:
 
