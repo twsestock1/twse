@@ -37,7 +37,7 @@ def db_test():
 
         cur.execute("""
             SELECT *
-            FROM stockslist;
+            FROM stocklist;
         """)
 
         rows = cur.fetchall()
@@ -62,11 +62,7 @@ def db_test():
             conn.close()
 
 @app.get("/stocks")
-def search_stock(
-
-    keyword: str = Query(..., description="股票代號或名稱")
-
-):
+def search_stock(keyword: str = Query(..., description="股票代號或名稱")):
 
     conn = None
     cur = None
@@ -84,7 +80,7 @@ def search_stock(
             "有價證券別",
             "產業別",
             "上市日期"
-        FROM stockslist
+        FROM stocklist
         WHERE
             "證券代號" = %s
             OR
@@ -131,7 +127,6 @@ def search_stock(
 
         if conn:
             conn.close()
-
 
 @app.get("/stocks/{stock_code}")
 def get_stock(stock_code: str):
@@ -185,3 +180,49 @@ def get_stock(stock_code: str):
 
         if conn:
             conn.close()
+
+# 測試新資料庫連線狀態
+@app.get("/api/stocks/search")
+def search_stocks(
+    keyword: str = Query(..., min_length=1)
+):
+
+    sql = """
+        SELECT
+            "證券代號",
+            "證券名稱",
+            "市場別",
+            "有價證券別",
+            "產業別",
+            "上市日期"
+        FROM stocklist
+        WHERE
+            "證券代號" ILIKE %s
+            OR "證券名稱" ILIKE %s
+        ORDER BY "證券代號";
+    """
+
+    search_keyword = f"%{keyword}%"
+
+    with get_db_connection() as conn:
+
+        with conn.cursor() as cur:
+
+            cur.execute(
+                sql,
+                (search_keyword, search_keyword)
+            )
+
+            rows = cur.fetchall()
+
+    return [
+        {
+            "證券代號": row[0],
+            "證券名稱": row[1],
+            "市場別": row[2],
+            "有價證券別": row[3],
+            "產業別": row[4],
+            "上市日期": row[5]
+        }
+        for row in rows
+    ]
