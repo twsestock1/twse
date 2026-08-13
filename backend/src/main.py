@@ -147,7 +147,7 @@ def get_stock(stock_code: str):
             "有價證券別",
             "產業別",
             "上市日期"
-        FROM stockslist
+        FROM stocklist
         WHERE
             "證券代號" = %s
         """
