@@ -4,6 +4,7 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>股價趨勢 - kuguge</title>
     <link rel="stylesheet" href="style.css">
 <!-- TradingView Lightweight Charts --> 
@@ -49,7 +50,7 @@
             // 呼叫 FastAPI
             // ====================================
 
-            const response = await fetch(`http://127.0.0.1:8000/stocks/history?keyword=${encodeURIComponent(keyword)}`);
+            const response = await fetch(`/stocks/history?keyword=${encodeURIComponent(keyword)}`);
 
             // 將回應轉成 JSON
             const data = await response.json();
