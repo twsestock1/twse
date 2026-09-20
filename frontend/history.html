@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <title>股價趨勢 - kuguge</title>
+    <link rel="stylesheet" href="style.css">
+<!-- TradingView Lightweight Charts --> 
+<script src="https://unpkg.com/lightweight-charts@5.0.8/dist/lightweight-charts.standalone.production.js"></script>
+</head>
+
+<body>
+
+<h2 id="stockTitle">查詢中...</h2>
+
+<!-- K線圖區域 --> 
+<div id="chartContainer"></div>
+
+<!-- 歷史股價表格 -->
+<pre id="result">查詢中...</pre>
+
+<script>
+
+    async function loadHistory() {
+
+        const result = document.getElementById("result");
+        const stockTitle = document.getElementById("stockTitle")
+        const chartContainer = document.getElementById("chartContainer");
+
+        // 取得目前網頁網址的 Query Parameter
+        const params = new URLSearchParams(window.location.search);
+
+        // 取得 ?keyword= 後面的值
+        const keyword = params.get("keyword");
+
+        // 如果網址沒有 keyword
+        if (!keyword) {
+            stockTitle.textContent = "查無相關證券資訊"
+            result.textContent = "網址缺少 keyword 查詢參數";
+            return;
+        }
+
+        result.textContent = "查詢中...";
+
+        try {
+
+            // ====================================
+            // 呼叫 FastAPI
+            // ====================================
+
+            const response = await fetch(`http://127.0.0.1:8000/stocks/history?keyword=${encodeURIComponent(keyword)}`);
+
+            // 將回應轉成 JSON
+            const data = await response.json();
+            console.log(data) // 印出data 資料
+
+            // 如果 HTTP 回應不是成功狀態
+            if (!response.ok) {
+
+                result.textContent =
+                    `錯誤 ${response.status}\n\n` +
+                    JSON.stringify(data, null, 2);
+
+                return;
+            }
+            //=====================
+            //修改 header
+            //=====================
+            //取得證券名稱與證券代號
+            const stock = data["股票"]; 
+            const stockCode = stock["證券代號"]; 
+            const stockName = stock["證券名稱"];
+            // 個股標題
+            stockTitle.textContent = `${stockName}(${stockCode})-股價趨勢`;
+            // 設定瀏覽器分頁標題 
+            document.title = `${stockName}(${stockCode}) - 股價趨勢 - kuguge`; 
+            // 取得歷史資料
+            const history = data["資料"]; 
+            if (!history || history.length === 0) { result.textContent = "查無歷史股價資料"; return; }
+            //--------------------TradingView Lightweight Charts 開始----------------------------
+            // =====================================
+            // 建立 K 線圖
+            // =====================================
+            chartContainer.innerHTML = "";
+
+            const chart = LightweightCharts.createChart(
+                chartContainer,
+                {
+                    width: chartContainer.clientWidth,
+                    height: 500,
+
+                    layout: {
+                        background: {
+                            color: "#ffffff"
+                        },
+                        textColor: "#333333"
+                    },
+
+                    grid: {
+                        vertLines: {
+                            color: "#eeeeee"
+                        },
+                        horzLines: {
+                            color: "#eeeeee"
+                        }
+                    },
+
+                    crosshair: {
+                        mode: LightweightCharts.CrosshairMode.Normal
+                    },
+
+                    rightPriceScale: {
+                        borderColor: "#cccccc"
+                    },
+
+                    timeScale: {
+                        borderColor: "#cccccc",
+                        timeVisible: true,
+                        secondsVisible: false
+                    }
+                }
+            );
+
+
+            // =====================================
+            // 建立 K 線 Series
+            // =====================================
+
+            const candlestickSeries = chart.addSeries(
+                LightweightCharts.CandlestickSeries,
+                {
+                    upColor: "#ef5350",
+                    downColor: "#26a69a",
+
+                    borderUpColor: "#ef5350",
+                    borderDownColor: "#26a69a",
+
+                    wickUpColor: "#ef5350",
+                    wickDownColor: "#26a69a"
+                }
+            );
+
+
+            // =====================================
+            // 建立成交量 Series
+            // =====================================
+
+            const volumeSeries = chart.addSeries(
+                LightweightCharts.HistogramSeries,
+                {
+                    priceFormat: {
+                        type: "volume"
+                    },
+
+                    priceScaleId: ""
+                }
+            );
+
+
+            // =====================================
+            // 設定成交量顯示在下方
+            // =====================================
+
+            volumeSeries.priceScale().applyOptions({
+                scaleMargins: {
+                    top: 0.8,
+                    bottom: 0
+                }
+            });
+
+
+            candlestickSeries.priceScale().applyOptions({
+                scaleMargins: {
+                    top: 0.1,
+                    bottom: 0.25
+                }
+            });
+
+            // =====================================
+            // 將 API 資料轉成 K 線格式
+            // =====================================
+
+            const candleData = [];
+            const volumeData = [];
+
+
+            for (const row of history) {
+
+                if (
+                    !row["交易日期"] ||
+                    row["開盤價"] == null ||
+                    row["最高價"] == null ||
+                    row["最低價"] == null ||
+                    row["收盤價"] == null
+                ) {
+                    continue;
+                }
+
+
+                // Lightweight Charts 日期格式：
+                // YYYY-MM-DD
+                const tradeDate = String(row["交易日期"])
+                    .substring(0, 10);
+
+
+                const open = Number(row["開盤價"]);
+                const high = Number(row["最高價"]);
+                const low = Number(row["最低價"]);
+                const close = Number(row["收盤價"]);
+
+
+                // K線資料
+                candleData.push({
+                    time: tradeDate,
+                    open: open,
+                    high: high,
+                    low: low,
+                    close: close
+                });
+
+
+                // 成交量資料
+                if (row["成交股數"] != null) {
+
+                    let color;
+                    if (close >= open){
+                        color = "#ef535088";
+                    } else {
+                        color = "#26a69a88";
+                    }
+                    // 將成交量放入volumeData中
+                    volumeData.push({
+                        time: tradeDate,
+                        value: Number(row["成交股數"]),
+                         color: color
+                    });
+
+                }
+
+            }
+
+            // ================================================== 
+            // 重要：K線資料排序必須放在 for 迴圈外面 
+            // ================================================== 
+            candleData.sort((a, b) => { return a.time.localeCompare(b.time); }); 
+            volumeData.sort((a, b) => { return a.time.localeCompare(b.time); });
+            
+            // =====================================
+            // 設定 K 線資料
+            // =====================================
+
+            candlestickSeries.setData(candleData);
+
+
+            // =====================================
+            // 設定成交量資料
+            // =====================================
+
+            volumeSeries.setData(volumeData);
+
+
+            // =====================================
+            // 自動調整圖表顯示範圍
+            // =====================================
+
+            chart.timeScale().fitContent();
+
+
+            // =====================================
+            // 視窗大小改變時，調整圖表寬度
+            // =====================================
+
+            window.addEventListener("resize", () => {
+
+                chart.applyOptions({
+                    width: chartContainer.clientWidth
+                });
+
+            });
+            //--------------------TradingView Lightweight Charts 截止----------------------------
+            
+            // =====================================
+            // 建立歷史股價表格
+            // =====================================
+            let tableHTML = 
+                ` <table> 
+                    <thead> 
+                        <tr> 
+                            <th>交易日期</th>  
+                            <th>開盤價</th> 
+                            <th>最高價</th> 
+                            <th>最低價</th> 
+                            <th>收盤價</th> 
+                            <th>成交金額</th> 
+                            <th>成交股數</th> 
+                        </tr> 
+                    </thead> 
+                <tbody> `; 
+            for (const row of history) { 
+                // 交易日期 格式轉換
+                let tradeDate = "";
+                if (row["交易日期"]) {
+                    tradeDate = row["交易日期"].replace(/-/g, "/");
+                }
+                // 成交金額千分位格式
+                let transactionAmount = "";
+                if (row["成交金額"] != null) {
+                    transactionAmount = Number(row["成交金額"]).toLocaleString("en-US");
+                }
+                // 成交股數千分位格式
+                let tradingVolume = "";
+                if (row["成交股數"] != null) {
+                    tradingVolume = Number(row["成交股數"]).toLocaleString("en-US");
+                }
+
+                // 加入表格列
+                tableHTML += ` 
+                    <tr> 
+                        <td>${tradeDate}</td> 
+                        <td>${row["開盤價"] ?? ""}</td> 
+                        <td>${row["最高價"] ?? ""}</td> 
+                        <td>${row["最低價"] ?? ""}</td> 
+                        <td>${row["收盤價"] ?? ""}</td> 
+                        <td>${transactionAmount}</td> 
+                        <td>${tradingVolume}</td> 
+                    </tr> `; } 
+            tableHTML += ` 
+            </tbody> 
+            </table> `; 
+
+            // 將表格顯示到網頁
+            result.innerHTML = tableHTML; 
+        } catch (error) { 
+                result.textContent = "無法連接後端 API"; 
+        }
+    }
+
+    // 網頁載入完成後，自動執行查詢
+    loadHistory();
+
+</script>
+
+</body>
+
+</html>
