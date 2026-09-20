@@ -1,143 +1,41 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-
-<head>
-
-    <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <title>股票搜尋</title>
-
-</head>
+<!DOCTYPE html> 
+<html lang="zh-TW"> 
+<head> 
+    <meta charset="UTF-8"> 
+    <title>kuguge估股雞</title> 
+</head> 
 
 <body>
 
-    <h1>股票搜尋</h1>
+<h2>股票查詢</h2>
 
-    <input
-        type="text"
-        id="stockKeyword"
-        placeholder="輸入證券代號或證券名稱"
-    >
+<input
+    type="text"
+    id="keyword"
+    placeholder="輸入證券代號，例如 2330"
+>
 
-    <button onclick="searchStocks()">
-        搜尋
-    </button>
+<button onclick="searchStock()">查詢歷史股價</button>
+<pre id="result"></pre> 
 
-    <div id="result"></div>
+<!-- ======================================== -->
+<!-- 個股歷史股價查詢 JavaScript -->
+<!-- ======================================== -->
+<script>
+    async function searchStock() {
+        const keyword = document.getElementById("keyword").value.trim();
+        const result = document.getElementById("result");
 
-    <script>
-        async function searchStocks() {
-
-    const keyword =
-        document
-            .getElementById("stockKeyword")
-            .value
-            .trim();
-
-    if (!keyword) {
-
-        alert("請輸入證券代號或證券名稱");
-
-        return;
-    }
-
-    try {
-
-        const response = await fetch(
-            `/api/stocks/search?keyword=${encodeURIComponent(keyword)}`
-        );
-
-        if (!response.ok) {
-
-            throw new Error(
-                `HTTP Error: ${response.status}`
-            );
+        if (!keyword) {
+            result.textContent = "請輸入證券代號";
+            return;
         }
 
-        const stocks = await response.json();
+        const encodedKeyword = encodeURIComponent(keyword);
 
-        displayStocks(stocks);
-
-    } catch (error) {
-
-        console.error(
-            "搜尋股票失敗:",
-            error
-        );
-
-        document.getElementById("result").innerHTML =
-            "<p>搜尋資料失敗，請稍後再試。</p>";
-    }
-}
-
-
-function displayStocks(stocks) {
-
-    const result =
-        document.getElementById("result");
-
-
-    if (stocks.length === 0) {
-
-        result.innerHTML =
-            "<p>找不到符合的股票。</p>";
-
-        return;
+        window.open(`history.html?keyword=${encodedKeyword}`,"_blank");
     }
 
-
-    let html = `
-        <table border="1">
-
-            <thead>
-
-                <tr>
-                    <th>證券代號</th>
-                    <th>證券名稱</th>
-                    <th>市場別</th>
-                    <th>有價證券別</th>
-                    <th>產業別</th>
-                    <th>上市日期</th>
-                </tr>
-
-            </thead>
-
-            <tbody>
-    `;
-
-
-    stocks.forEach(stock => {
-
-        html += `
-            <tr>
-                <td>${stock["證券代號"]}</td>
-                <td>${stock["證券名稱"]}</td>
-                <td>${stock["市場別"]}</td>
-                <td>${stock["有價證券別"]}</td>
-                <td>${stock["產業別"] ?? ""}</td>
-                <td>${stock["上市日期"] ?? ""}</td>
-            </tr>
-        `;
-
-    });
-
-
-    html += `
-            </tbody>
-
-        </table>
-    `;
-
-
-    result.innerHTML = html;
-}
-    </script>
-
+</script>
 </body>
-
 </html>

@@ -4,9 +4,13 @@ __pycache__/
 
 # Environment
 *.env
+*.venv/
 
 # Docker
 *.log
 
 #AWS EC2
 *.pem
+
+#text
+versionlog.md
