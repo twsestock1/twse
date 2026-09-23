@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>會員中心 - kuguge</title>
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+
+</head>
+
+
+<body>
+
+    <div class="auth-container">
+
+        <h1>會員中心</h1>
+
+
+        <!-- ======================================== -->
+        <!-- 顯示歡迎訊息 -->
+        <!-- ======================================== -->
+
+        <h2 id="welcomeMessage">
+            載入會員資料中...
+        </h2>
+
+
+        <!-- ======================================== -->
+        <!-- 顯示會員資料 -->
+        <!-- ======================================== -->
+
+        <div id="userInfo">
+
+
+            <p>
+                <strong>會員編號：</strong>
+                <span id="userId"></span>
+            </p>
+
+
+            <p>
+                <strong>使用者名稱：</strong>
+                <span id="username"></span>
+            </p>
+
+
+            <p>
+                <strong>暱稱：</strong>
+                <span id="nickname"></span>
+            </p>
+
+
+            <p>
+                <strong>Email：</strong>
+                <span id="email"></span>
+            </p>
+
+
+            <p>
+                <strong>手機：</strong>
+                <span id="phone"></span>
+            </p>
+
+
+            <p>
+                <strong>帳號狀態：</strong>
+                <span id="isActive"></span>
+            </p>
+
+
+            <p>
+                <strong>註冊時間：</strong>
+                <span id="createdAt"></span>
+            </p>
+
+
+            <!-- ==================================== -->
+            <!-- 會員等級 -->
+            <!-- ==================================== -->
+
+            <p>
+                <strong>會員等級：</strong>
+                <span id="memberLevel"></span>
+            </p>
+
+
+        </div>
+
+
+        <!-- ======================================== -->
+        <!-- 會員功能 -->
+        <!-- ======================================== -->
+
+        <div id="memberFeatures">
+
+
+            <h3>
+                可使用的網站功能
+            </h3>
+
+
+            <ul id="featureList">
+
+                <li>
+                    載入功能資料中...
+                </li>
+
+            </ul>
+
+
+        </div>
+
+
+        <!-- ======================================== -->
+        <!-- 顯示錯誤訊息 -->
+        <!-- ======================================== -->
+
+        <p id="memberMessage"></p>
+
+
+        <!-- ======================================== -->
+        <!-- 登出按鈕 -->
+        <!-- ======================================== -->
+
+        <button
+            type="button"
+            id="logoutButton"
+        >
+            登出
+        </button>
+
+
+        <!-- ======================================== -->
+        <!-- 返回股票首頁 -->
+        <!-- ======================================== -->
+
+        <p class="auth-link">
+
+            <a href="index.html">
+                返回股票首頁
+            </a>
+
+        </p>
+
+
+    </div>
+
+
+    <!-- ======================================== -->
+    <!-- 載入共用會員 JavaScript -->
+    <!-- ======================================== -->
+
+    <script src="auth.js"></script>
+
+
+    <script>
+
+
+        // ========================================
+        // 取得 HTML 元素
+        // ========================================
+
+
+        const welcomeMessage =
+            document.getElementById("welcomeMessage");
+
+
+        const memberMessage =
+            document.getElementById("memberMessage");
+
+
+        const userId =
+            document.getElementById("userId");
+
+
+        const username =
+            document.getElementById("username");
+
+
+        const nickname =
+            document.getElementById("nickname");
+
+
+        const email =
+            document.getElementById("email");
+
+
+        const phone =
+            document.getElementById("phone");
+
+
+        const isActive =
+            document.getElementById("isActive");
+
+
+        const createdAt =
+            document.getElementById("createdAt");
+
+
+        const memberLevel =
+            document.getElementById("memberLevel");
+
+
+        const featureList =
+            document.getElementById("featureList");
+
+
+        const logoutButton =
+            document.getElementById("logoutButton");
+
+
+        // ========================================
+        // 載入目前登入會員資料
+        // ========================================
+
+        async function loadCurrentUser() {
+
+            try {
+
+                // ====================================
+                // 呼叫 auth.js 的 getCurrentUser()
+                // ====================================
+
+                const user =
+                    await getCurrentUser();
+
+
+                // ====================================
+                // 顯示歡迎訊息
+                // ====================================
+
+                welcomeMessage.textContent =
+                    `歡迎回來，${user.nickname}`;
+
+
+                // ====================================
+                // 顯示會員編號
+                // ====================================
+
+                userId.textContent =
+                    user.user_id;
+
+
+                // ====================================
+                // 顯示使用者名稱
+                // ====================================
+
+                username.textContent =
+                    user.username;
+
+
+                // ====================================
+                // 顯示暱稱
+                // ====================================
+
+                nickname.textContent =
+                    user.nickname;
+
+
+                // ====================================
+                // 顯示 Email
+                // ====================================
+
+                email.textContent =
+                    user.email;
+
+
+                // ====================================
+                // 顯示手機
+                // ====================================
+
+                phone.textContent =
+                    user.phone || "未提供";
+
+
+                // ====================================
+                // 顯示帳號狀態
+                // ====================================
+
+                isActive.textContent =
+                    user.is_active
+                        ? "啟用中"
+                        : "已停用";
+
+
+                // ====================================
+                // 顯示註冊時間
+                // ====================================
+
+                createdAt.textContent =
+                    user.created_at || "未提供";
+
+
+                // ====================================
+                // 顯示會員等級
+                // ====================================
+
+                memberLevel.textContent =
+                    user.member_level_name
+                    || "未設定";
+
+
+                // ====================================
+                // 顯示會員功能
+                // ====================================
+
+                displayFeatures(
+                    user.features
+                );
+
+            }
+
+
+            catch (error) {
+
+                // ====================================
+                // 顯示錯誤訊息
+                // ====================================
+
+                memberMessage.textContent =
+                    error.message;
+
+
+                // ====================================
+                // 稍微等待後返回登入頁
+                // ====================================
+
+                setTimeout(
+                    function() {
+
+                        window.location.href =
+                            "login.html";
+
+                    },
+                    1000
+                );
+
+            }
+
+        }
+
+
+        // ========================================
+        // 顯示會員可以使用的網站功能
+        // ========================================
+
+        function displayFeatures(features) {
+
+
+            // ====================================
+            // 先清除原本的功能清單
+            // ====================================
+
+            featureList.innerHTML = "";
+
+
+            // ====================================
+            // 沒有功能
+            // ====================================
+
+            if (
+                !Array.isArray(features)
+                || features.length === 0
+            ) {
+
+                const li =
+                    document.createElement("li");
+
+
+                li.textContent =
+                    "目前沒有可使用的網站功能";
+
+
+                featureList.appendChild(li);
+
+
+                return;
+
+            }
+
+
+            // ====================================
+            // 建立功能清單
+            // ====================================
+
+            for (const feature of features) {
+
+
+                const li =
+                    document.createElement("li");
+
+
+                // ==================================
+                // 顯示功能名稱
+                // ==================================
+
+                li.textContent =
+                    feature.feature_name;
+
+
+                // ==================================
+                // 加入清單
+                // ==================================
+
+                featureList.appendChild(li);
+
+            }
+
+        }
+
+
+        // ========================================
+        // 登出功能
+        // ========================================
+
+        logoutButton.addEventListener(
+            "click",
+            async function() {
+
+                try {
+
+                    // ==================================
+                    // 呼叫後端登出 API
+                    // ==================================
+
+                    await logoutUser();
+
+                }
+
+                catch (error) {
+
+                    console.error(
+                        "登出 API 錯誤：",
+                        error
+                    );
+
+                }
+
+                finally {
+
+                    // ==================================
+                    // 不論 API 成功或失敗
+                    // 都回到登入頁
+                    // ==================================
+
+                    window.location.href =
+                        "login.html";
+
+                }
+
+            }
+        );
+
+
+        // ========================================
+        // 頁面載入時執行
+        // ========================================
+
+        loadCurrentUser();
+
+
+    </script>
+
+
+</body>
+
+</html>

@@ -1,13 +1,69 @@
-<!DOCTYPE html> 
-<html lang="zh-TW"> 
-<head> 
-    <meta charset="UTF-8"> 
-    <title>kuguge估股雞</title> 
-</head> 
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <title>kuguge估股雞</title>
+</head>
+
 
 <body>
 
+
+<!-- ======================================== -->
+<!-- 會員操作區 -->
+<!-- ======================================== -->
+
+<div class="member-nav">
+
+
+    <!-- ==================================== -->
+    <!-- 未登入時顯示 -->
+    <!-- ==================================== -->
+
+    <div id="guestMenu">
+
+        <a href="login.html">
+            登入
+        </a>
+
+        <a href="register.html">
+            註冊
+        </a>
+
+    </div>
+
+
+    <!-- ==================================== -->
+    <!-- 已登入時顯示 -->
+    <!-- ==================================== -->
+
+    <div id="userMenu" style="display: none;">
+
+        <span id="navWelcome"></span>
+
+        <a href="member.html">
+            會員中心
+        </a>
+
+        <button
+            type="button"
+            id="navLogoutButton"
+        >
+            登出
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- ======================================== -->
+<!-- 股票查詢 -->
+<!-- ======================================== -->
+
 <h2>股票查詢</h2>
+
 
 <input
     type="text"
@@ -15,27 +71,432 @@
     placeholder="輸入證券代號，例如 2330"
 >
 
-<button onclick="searchStock()">查詢歷史股價</button>
-<pre id="result"></pre> 
+
+<button
+    type="button"
+    id="searchStockButton"
+>
+    查詢歷史股價
+</button>
+
+
+<pre id="result"></pre>
+
+
+<!-- ======================================== -->
+<!-- 載入共用會員 JavaScript -->
+<!-- ======================================== -->
+
+<script src="auth.js"></script>
+
 
 <!-- ======================================== -->
 <!-- 個股歷史股價查詢 JavaScript -->
 <!-- ======================================== -->
-<script>
-    async function searchStock() {
-        const keyword = document.getElementById("keyword").value.trim();
-        const result = document.getElementById("result");
 
-        if (!keyword) {
-            result.textContent = "請輸入證券代號";
-            return;
+<script>
+
+
+    // ========================================
+    // 取得首頁 HTML 元素
+    // ========================================
+
+    const keywordInput =
+        document.getElementById("keyword");
+
+
+    const searchStockButton =
+        document.getElementById("searchStockButton");
+
+
+    const result =
+        document.getElementById("result");
+
+
+    // ========================================
+    // 儲存目前登入會員資料
+    //
+    // 如果沒有登入：
+    // currentUser = null
+    //
+    // 如果已登入：
+    // currentUser = {
+    //     user_id,
+    //     username,
+    //     nickname,
+    //     member_level,
+    //     member_level_name,
+    //     features
+    // }
+    // ========================================
+
+    let currentUser = null;
+
+
+    // ========================================
+    // 檢查會員是否具有指定功能
+    // ========================================
+
+    function hasFeature(featureCode) {
+
+
+        // 沒有會員資料
+        if (!currentUser) {
+
+            return false;
+
         }
 
-        const encodedKeyword = encodeURIComponent(keyword);
 
-        window.open(`history.html?keyword=${encodedKeyword}`,"_blank");
+        // 沒有 features
+        if (!Array.isArray(currentUser.features)) {
+
+            return false;
+
+        }
+
+
+        // 尋找指定功能
+        return currentUser.features.some(
+            function(feature) {
+
+                return feature.feature_code === featureCode;
+
+            }
+        );
+
     }
 
+
+    // ========================================
+    // 歷史股價查詢
+    // ========================================
+
+    async function searchStock() {
+
+
+        // ====================================
+        // 第 1 層：檢查是否有 Token
+        // ====================================
+
+        const token = getToken();
+
+
+        if (!token) {
+
+
+            result.textContent =
+                "請先登入會員，才能使用歷史股價查詢功能";
+
+
+            const goLogin = confirm(
+                "請先登入會員，才能使用歷史股價查詢功能。\n\n是否前往登入頁面？"
+            );
+
+
+            if (goLogin) {
+
+                window.location.href = "login.html";
+
+            }
+
+
+            return;
+
+        }
+
+
+        // ====================================
+        // 第 2 層：取得目前會員資料
+        // ====================================
+
+        try {
+
+
+            const user = await getCurrentUser();
+
+
+            // 儲存會員資料
+            currentUser = user;
+
+
+        }
+
+        catch (error) {
+
+
+            result.textContent =
+                "登入狀態已失效，請重新登入";
+
+
+            const goLogin = confirm(
+                "登入狀態已失效，請重新登入會員。\n\n是否前往登入頁面？"
+            );
+
+
+            if (goLogin) {
+
+                window.location.href = "login.html";
+
+            }
+
+
+            return;
+
+        }
+
+
+        // ====================================
+        // 第 3 層：檢查會員功能權限
+        // ====================================
+
+        if (!hasFeature("stock_history")) {
+
+
+            result.textContent =
+                "目前會員等級沒有使用歷史股價查詢功能的權限";
+
+
+            alert(
+                "目前會員等級沒有使用歷史股價查詢功能的權限。"
+            );
+
+
+            return;
+
+        }
+
+
+        // ====================================
+        // 第 4 層：檢查搜尋關鍵字
+        // ====================================
+
+        const keyword =
+            keywordInput.value.trim();
+
+
+        if (!keyword) {
+
+
+            result.textContent =
+                "請輸入證券代號";
+
+
+            return;
+
+        }
+
+
+        // ====================================
+        // 第 5 層：開啟歷史股價頁面
+        // ====================================
+
+        const encodedKeyword =
+            encodeURIComponent(keyword);
+
+
+        window.open(
+            `history.html?keyword=${encodedKeyword}`,
+            "_blank"
+        );
+
+    }
+
+
+    // ========================================
+    // 綁定「查詢歷史股價」按鈕
+    // ========================================
+
+    searchStockButton.addEventListener(
+        "click",
+        searchStock
+    );
+
+
+    // ========================================
+    // 會員登入 JavaScript
+    // ========================================
+
+
+    // ========================================
+    // 取得會員選單 HTML 元素
+    // ========================================
+
+    const guestMenu =
+        document.getElementById("guestMenu");
+
+
+    const userMenu =
+        document.getElementById("userMenu");
+
+
+    const navWelcome =
+        document.getElementById("navWelcome");
+
+
+    const navLogoutButton =
+        document.getElementById("navLogoutButton");
+
+
+    // ========================================
+    // 檢查目前登入狀態
+    // ========================================
+
+    async function checkLoginStatus() {
+
+
+        // ====================================
+        // 先檢查瀏覽器是否有 Token
+        // ====================================
+
+        const token =
+            getToken();
+
+
+        // ====================================
+        // 沒有 Token
+        // ====================================
+
+        if (!token) {
+
+
+            currentUser = null;
+
+
+            guestMenu.style.display =
+                "block";
+
+
+            userMenu.style.display =
+                "none";
+
+
+            return;
+
+        }
+
+
+        // ====================================
+        // 有 Token
+        // 向後端確認會員資料
+        // ====================================
+
+        try {
+
+
+            const user =
+                await getCurrentUser();
+
+
+            // 儲存會員資料
+            currentUser = user;
+
+
+            // =================================
+            // 隱藏登入／註冊
+            // =================================
+
+            guestMenu.style.display =
+                "none";
+
+
+            // =================================
+            // 顯示會員選單
+            // =================================
+
+            userMenu.style.display =
+                "block";
+
+
+            // =================================
+            // 顯示會員暱稱
+            // =================================
+
+            navWelcome.textContent =
+                `歡迎回來，${user.nickname}`;
+
+
+        }
+
+        catch (error) {
+
+
+            // =================================
+            // Token 無效
+            //
+            // getCurrentUser()
+            // 已經會清除 Token
+            // =================================
+
+            currentUser = null;
+
+
+            guestMenu.style.display =
+                "block";
+
+
+            userMenu.style.display =
+                "none";
+
+        }
+
+    }
+
+
+    // ========================================
+    // 首頁登出功能
+    // ========================================
+
+    navLogoutButton.addEventListener(
+        "click",
+        async function() {
+
+
+            try {
+
+
+                await logoutUser();
+
+
+            }
+
+            catch (error) {
+
+
+                console.error(
+                    "登出錯誤：",
+                    error
+                );
+
+
+            }
+
+            finally {
+
+
+                // ==============================
+                // 登出後重新整理首頁
+                // ==============================
+
+                window.location.reload();
+
+
+            }
+
+        }
+    );
+
+
+    // ========================================
+    // 頁面載入時檢查登入狀態
+    // ========================================
+
+    checkLoginStatus();
+
+
 </script>
+
+
 </body>
+
 </html>
