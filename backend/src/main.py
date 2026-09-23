@@ -55,7 +55,7 @@ app.include_router(auth_router)
 # 2. 會員等級必須具有 stock_history 功能
 # ============================================
 
-@app.get("/stocks/history")
+@app.get("/history")
 def stockprice_history(
     keyword: str = Query(
         ...,
